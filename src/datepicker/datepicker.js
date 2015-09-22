@@ -45,6 +45,15 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     }
   });
 
+  this.onMonthMovedCallback = function(){
+    if ( this.element ) {
+      if($scope.onMonthMovedCallback() !== undefined){
+        var dayDefinition = this._getDaysDefinition();
+        $scope.onMonthMovedCallback()(this._refreshView, dayDefinition.start, dayDefinition.end);
+      }
+    }
+  };
+
   angular.forEach(['minMode', 'maxMode'], function(key) {
     if ($attrs[key]) {
       $scope.$parent.$watch($parse($attrs[key]), function(value) {
@@ -171,6 +180,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
         month = self.activeDate.getMonth() + direction * (self.step.months || 0);
     self.activeDate.setFullYear(year, month, 1);
     self.refreshView();
+    self.onMonthMovedCallback();
   };
 
   $scope.toggleMode = function(direction) {
@@ -230,7 +240,8 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
       datepickerMode: '=?',
       dateDisabled: '&',
       customClass: '&',
-      shortcutPropagation: '&?'
+      shortcutPropagation: '&?',
+      onMonthMovedCallback:'&'
     },
     require: ['datepicker', '^ngModel'],
     controller: 'DatepickerController',
@@ -239,6 +250,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
       var datepickerCtrl = ctrls[0], ngModelCtrl = ctrls[1];
 
       datepickerCtrl.init(ngModelCtrl);
+      datepickerCtrl.onMonthMovedCallback();
     }
   };
 })
@@ -302,6 +314,16 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
         scope.title = dateFilter(ctrl.activeDate, ctrl.formatDayTitle);
         scope.rows = ctrl.split(days, 7);
+
+        ctrl._getDaysDefinition = function()
+        {
+            var obj = {};
+
+            obj.start = scope.rows[0][0];
+            obj.end = scope.rows[5][6];
+
+            return obj;
+        }
 
         if (scope.showWeeks) {
           scope.weekNumbers = [];
